@@ -6,7 +6,7 @@ use instrument::unit::NoteVelocity;
 use oscillator::{self, Amplitude, Frequency, FreqWarp, Oscillator, Waveform};
 use panning::stereo;
 use pitch;
-use sample::{self, Frame, Sample};
+use dasp::{self, Frame, Sample};
 use std;
 use time;
 
@@ -378,8 +378,8 @@ impl<M, NFG, W, A, F, FW> Synth<M, NFG, W, A, F, FW>
     /// Produces an `Iterator` that endlessly yields new `Frame`s
     pub fn frames<FRM>(&mut self, sample_hz: f64) -> Frames<FRM, NFG::NoteFreq, W, A, F, FW>
         where FRM: Frame,
-              <FRM::Sample as Sample>::Float: sample::FromSample<f32>,
-              <FRM::Sample as Sample>::Signed: sample::FromSample<f32>,
+              <FRM::Sample as Sample>::Float: dasp::sample::FromSample<f32>,
+              <FRM::Sample as Sample>::Signed: dasp::sample::FromSample<f32>,
     {
         let Synth {
             ref mut oscillators,
@@ -417,9 +417,9 @@ impl<M, NFG, W, A, F, FW> Synth<M, NFG, W, A, F, FW>
 
     /// Additively fill the given slice of `Frame`s with the `Synth::frames` method.
     pub fn fill_slice<FRM>(&mut self, output: &mut [FRM], sample_hz: f64)
-        where FRM: sample::Frame,
-              <FRM::Sample as Sample>::Float: sample::FromSample<f32>,
-              <FRM::Sample as Sample>::Signed: sample::FromSample<f32>,
+        where FRM: dasp::Frame,
+              <FRM::Sample as Sample>::Float: dasp::sample::FromSample<f32>,
+              <FRM::Sample as Sample>::Signed: dasp::sample::FromSample<f32>,
               M: instrument::Mode,
               NFG: instrument::NoteFreqGenerator,
               W: oscillator::Waveform,
@@ -428,7 +428,7 @@ impl<M, NFG, W, A, F, FW> Synth<M, NFG, W, A, F, FW>
               FW: oscillator::FreqWarp,
     {
         let mut frames = self.frames::<FRM>(sample_hz);
-        sample::slice::map_in_place(output, |f| {
+        dasp::slice::map_in_place(output, |f| {
             f.zip_map(frames.next_frame(), |a, b| a.add_amp(b.to_sample()))
         });
     }
@@ -438,8 +438,8 @@ impl<M, NFG, W, A, F, FW> Synth<M, NFG, W, A, F, FW>
 
 impl<'a, FRM, NF, W, A, F, FW> Frames<'a, FRM, NF, W, A, F, FW>
     where FRM: Frame,
-          <FRM::Sample as Sample>::Float: sample::FromSample<f32>,
-          <FRM::Sample as Sample>::Signed: sample::FromSample<f32>,
+          <FRM::Sample as Sample>::Float: dasp::sample::FromSample<f32>,
+          <FRM::Sample as Sample>::Signed: dasp::sample::FromSample<f32>,
           NF: NoteFreq,
           W: Waveform,
           A: Amplitude,
@@ -469,9 +469,9 @@ impl<'a, FRM, NF, W, A, F, FW> Frames<'a, FRM, NF, W, A, F, FW>
             .zip(frame_per_voice)
             .filter_map(|(v, amp_hz)| amp_hz.map(|amp_hz| (v, amp_hz)))
             .enumerate();
-        let should_spread = FRM::n_channels() == 2 && spread > 0.0;
-
-        let mut frame = FRM::equilibrium();
+        let should_spread = FRM::CHANNELS == 2 && spread > 0.0;
+        
+        let mut frame = FRM::EQUILIBRIUM;
         for (i, (voice, (amp, hz))) in iter {
             let Voice { ref mut loop_playhead, ref mut oscillator_states } = *voice;
             if *loop_playhead < duration {
@@ -517,8 +517,8 @@ impl<'a, FRM, NF, W, A, F, FW> Frames<'a, FRM, NF, W, A, F, FW>
 
 impl<'a, FRM, NF, W, A, F, FW> Iterator for Frames<'a, FRM, NF, W, A, F, FW>
     where FRM: Frame,
-          <FRM::Sample as Sample>::Float: sample::FromSample<f32>,
-          <FRM::Sample as Sample>::Signed: sample::FromSample<f32>,
+          <FRM::Sample as Sample>::Float: dasp::sample::FromSample<f32>,
+          <FRM::Sample as Sample>::Signed: dasp::sample::FromSample<f32>,
           NF: NoteFreq,
           W: Waveform,
           A: Amplitude,

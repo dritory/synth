@@ -8,7 +8,7 @@
 
 extern crate pitch_calc as pitch;
 extern crate portaudio;
-extern crate sample;
+extern crate dasp;
 extern crate synth;
 
 use portaudio as pa;
@@ -98,8 +98,8 @@ fn run() -> Result<(), pa::Error> {
 
     // The callback we'll use to pass to the Stream.
     let callback = move |pa::OutputStreamCallbackArgs { buffer, time, .. }| {
-        let buffer: &mut [[f32; CHANNELS as usize]] = sample::slice::to_frame_slice_mut(buffer).unwrap();
-        sample::slice::equilibrium(buffer);
+        let buffer: &mut [[f32; CHANNELS as usize]] = dasp::slice::to_frame_slice_mut(buffer).unwrap();
+        dasp::slice::equilibrium(buffer);
 
         synth.fill_slice(buffer, SAMPLE_HZ as f64);
         if timer < 6.0 {
