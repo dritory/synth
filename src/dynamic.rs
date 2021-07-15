@@ -69,5 +69,36 @@ impl Synth {
     pub fn set_note_freq_gen(&mut self, note_freq_gen: note_freq::DynamicGenerator) {
         self.instrument.note_freq_gen = note_freq_gen;
     }
+    
+    /// Set the attack in milliseconds.
+    pub fn set_attack<Attack>(&mut self, attack: Attack)
+        where Attack: Into<time::Ms>,
+    {
+        self.instrument.attack_ms = attack.into();
+    }
+    
+    /// Set the release in milliseconds.
+    pub fn set_release<Release>(&mut self, release: Release)
+        where Release: Into<time::Ms>,
+    {
+        self.instrument.attack_ms = release.into();
+    }
+
+    #[inline]
+    /// Set the Synth's detune amount.
+    pub fn set_detune(&mut self, detune: f32) {
+        self.instrument.detune = detune;
+    }
+    #[inline]
+    /// Set the Synth's spread amount.
+    pub fn set_spread(&mut self, spread: f32) {
+        self.spread = spread;
+    }
+    #[inline]
+    /// Set the Synth's volume.
+    pub fn set_volume(&mut self, vol: f32) {
+        self.volume = vol;
+    }
+
 
 }
